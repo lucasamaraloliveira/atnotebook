@@ -1,0 +1,7 @@
+{
+  "name": "OmniNotebook Studio",
+  "description": "Alternativa independente ao Gemini Notebook para ingestão de fontes, migração manual íntegra e IA dedicada com citações e compartilhamento irrestrito.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

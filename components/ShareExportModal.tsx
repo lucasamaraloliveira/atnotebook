@@ -8,6 +8,7 @@ import {
   encodeNotebookForShare,
   exportFullNotebookFile,
 } from '@/lib/storage';
+import { saveSharedNotebookToFirestore } from '@/lib/firestore';
 import {
   X,
   Share2,
@@ -59,23 +60,40 @@ export function ShareExportModal({
       if (!isCancelled) setIsGeneratingLink(true);
     });
 
-    fetch('/api/share', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ notebook }),
-    })
-      .then((res) => res.json())
-      .then((data) => {
-        if (!isCancelled && data && data.shareId) {
-          setShareId(data.shareId);
+    async function generateLink() {
+      // 1. Try saving to Cloud Firestore with subcollections (handles 300+ sources without size limits)
+      try {
+        const cloudRes = await saveSharedNotebookToFirestore(notebook);
+        if (!isCancelled && cloudRes.success && cloudRes.shareId) {
+          setShareId(cloudRes.shareId);
+          setIsGeneratingLink(false);
+          return;
         }
+      } catch (cloudErr) {
+        console.warn('Direct Firestore share fallback:', cloudErr);
+      }
+
+      // 2. Fallback to /api/share
+      fetch('/api/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notebook }),
       })
-      .catch((err) => {
-        console.error('Failed to create server share link:', err);
-      })
-      .finally(() => {
-        if (!isCancelled) setIsGeneratingLink(false);
-      });
+        .then((res) => res.json())
+        .then((data) => {
+          if (!isCancelled && data && data.shareId) {
+            setShareId(data.shareId);
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to create server share link:', err);
+        })
+        .finally(() => {
+          if (!isCancelled) setIsGeneratingLink(false);
+        });
+    }
+
+    generateLink();
 
     return () => {
       isCancelled = true;

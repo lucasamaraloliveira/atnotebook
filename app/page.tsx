@@ -31,6 +31,7 @@ import {
 import {
   saveNotebookToFirestore,
   loadNotebooksFromFirestore,
+  getSharedNotebookFromFirestore,
   deleteNotebookFromFirestore,
   type CloudSyncStatus,
 } from '@/lib/firestore';
@@ -49,6 +50,8 @@ import { AuditDuplicatesModal } from '@/components/AuditDuplicatesModal';
 import { DeleteSectionModal } from '@/components/DeleteSectionModal';
 import { EditNotebookModal } from '@/components/EditNotebookModal';
 import { ImportNotebookModal } from '@/components/ImportNotebookModal';
+import { NotebookAnalyticsModal } from '@/components/NotebookAnalyticsModal';
+import { recordNotebookInteraction } from '@/lib/analytics';
 import {
   Layers,
   MessageSquare,
@@ -167,6 +170,7 @@ export default function Home() {
   const [importSuccessToast, setImportSuccessToast] = useState<string | null>(null);
   const [cloudSyncStatus, setCloudSyncStatus] = useState<CloudSyncStatus>('local_only');
   const [isEditNotebookOpen, setIsEditNotebookOpen] = useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [notebookToEdit, setNotebookToEdit] = useState<Notebook | null>(null);
   const [isSectionModalOpen, setIsSectionModalOpen] = useState(false);
   const [sectionToEdit, setSectionToEdit] = useState<NotebookSection | null>(null);
@@ -202,15 +206,21 @@ export default function Home() {
         const shareId = urlParams.get('shareId');
         if (shareId) {
           try {
-            const res = await fetch(`/api/share?shareId=${shareId}`);
-            if (res.ok) {
-              const data = await res.json();
-              if (data && data.notebook) {
-                sharedNb = data.notebook;
+            // First attempt to load shared notebook directly from Cloud Firestore with subcollections
+            const cloudShared = await getSharedNotebookFromFirestore(shareId);
+            if (cloudShared) {
+              sharedNb = cloudShared;
+            } else {
+              const res = await fetch(`/api/share?shareId=${shareId}`);
+              if (res.ok) {
+                const data = await res.json();
+                if (data && data.notebook) {
+                  sharedNb = data.notebook;
+                }
               }
             }
           } catch (e) {
-            console.error('Failed to fetch shared notebook from /api/share:', e);
+            console.error('Failed to fetch shared notebook from cloud:', e);
           }
         }
 
@@ -320,13 +330,22 @@ export default function Home() {
     setCloudSyncStatus('syncing');
     try {
       const res = await saveNotebookToFirestore(activeNotebook);
+      // Also sync all other notebooks in background so all notebooks exist in Firestore
+      for (const nb of notebooks) {
+        if (nb.id !== activeNotebook.id) {
+          saveNotebookToFirestore(nb).catch(() => {});
+        }
+      }
+
       setCloudSyncStatus(res.status);
       if (res.status === 'api_disabled') {
         alert(
           'A API Cloud Firestore ainda não está ativada no projeto Firebase (atnotebook-1eb35).\n\nPara ativá-la e sincronizar automaticamente entre múltiplos dispositivos, acesse:\nhttps://console.firebase.google.com/project/atnotebook-1eb35/firestore\n\nEnquanto isso, seus cadernos continuam 100% salvos e seguros no IndexedDB local do seu navegador!'
         );
       } else if (res.success) {
-        setImportSuccessToast(`Caderno "${activeNotebook.title}" sincronizado com a nuvem Firebase!`);
+        setImportSuccessToast(
+          `Caderno "${activeNotebook.title}" (${activeNotebook.sources?.length || 0} fontes) sincronizado com a nuvem Firebase!`
+        );
         setTimeout(() => setImportSuccessToast(null), 4000);
       }
     } catch {
@@ -758,8 +777,11 @@ export default function Home() {
 
     const newChatHistory = [...activeNotebook.chatHistory, userMessage];
 
+    // Record interaction in analytics
+    const nbWithStats = recordNotebookInteraction(activeNotebook, 'query', Math.round(text.length / 4) + 120);
+
     const nbOptimistic: Notebook = {
-      ...activeNotebook,
+      ...nbWithStats,
       chatHistory: newChatHistory,
       updatedAt: new Date().toISOString(),
     };
@@ -1000,6 +1022,7 @@ export default function Home() {
         onOpenMigration={() => setIsMigrationOpen(true)}
         onOpenImportNotebook={() => setIsImportNotebookOpen(true)}
         onOpenShareExport={() => setIsShareExportOpen(true)}
+        onOpenAnalytics={() => setIsAnalyticsOpen(true)}
         onRenameNotebook={handleRenameNotebook}
         onOpenEditNotebook={handleOpenEditNotebook}
         onDeleteNotebook={handleDeleteNotebook}
@@ -1438,6 +1461,15 @@ export default function Home() {
         notebook={notebookToEdit}
         onSaveNotebook={handleSaveNotebookDetails}
       />
+
+      {/* Notebook Usage Analytics & Frequency Modal (Admin / Editor only) */}
+      <NotebookAnalyticsModal
+        isOpen={isAnalyticsOpen}
+        onClose={() => setIsAnalyticsOpen(false)}
+        notebook={activeNotebook}
+        userRole={userRole}
+      />
+
 
       {/* Import Complete Success Toast */}
       {importSuccessToast && (

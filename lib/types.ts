@@ -87,6 +87,22 @@ export interface ShareSettings {
   }>;
 }
 
+export interface DailyUsageMetric {
+  date: string; // 'YYYY-MM-DD'
+  label: string; // 'Seg', 'Ter', etc.
+  queries: number;
+  tokensEstimated: number;
+  sourcesAdded: number;
+  notesAdded: number;
+}
+
+export interface NotebookUsageStats {
+  totalQueries?: number;
+  totalTokensProcessed?: number;
+  lastActiveAt?: string;
+  dailyActivity?: Record<string, { queries?: number; tokens?: number; sourcesAdded?: number; notesAdded?: number }>;
+}
+
 export interface Notebook {
   id: string;
   title: string;
@@ -101,7 +117,9 @@ export interface Notebook {
   chatSessions?: ChatSession[];
   notes: NotebookNote[];
   shareSettings?: ShareSettings;
+  usageStats?: NotebookUsageStats;
 }
+
 
 export interface ATNotebookExportPackage {
   format: 'ATNotebook';

@@ -250,8 +250,12 @@ export function ChatWorkspace({
         <div className="w-full max-w-5xl xl:max-w-6xl mx-auto space-y-6 flex-1 flex flex-col justify-start">
           {messages.length === 0 ? (
             <div className="max-w-xl sm:max-w-2xl lg:max-w-3xl mx-auto py-8 sm:py-12 text-center space-y-6 my-auto">
-              <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800 flex items-center justify-center mx-auto text-amber-800 dark:text-amber-300">
-                <Sparkles className="w-6 h-6" />
+              <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto flex items-center justify-center">
+                <img
+                  src="/logo.png"
+                  alt="ATNotebook Logo"
+                  className="w-full h-full object-contain drop-shadow-xl select-none"
+                />
               </div>
 
               <div className="space-y-2">
@@ -326,9 +330,11 @@ export function ChatWorkspace({
                   className={`flex gap-3 sm:gap-4 w-full ${isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   {!isUser && (
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900 dark:bg-slate-800 text-amber-400 flex items-center justify-center shrink-0 mt-1 shadow-2xs">
-                      <Bot className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-                    </div>
+                    <img
+                      src="/logo.png"
+                      alt="ATNotebook IA"
+                      className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl object-cover shrink-0 mt-1 shadow-2xs ring-1 ring-slate-800/10 dark:ring-white/10"
+                    />
                   )}
 
                   <div
@@ -521,9 +527,11 @@ export function ChatWorkspace({
 
           {isGenerating && (
             <div className="flex gap-3 sm:gap-4 w-full justify-start">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900 dark:bg-slate-800 text-amber-400 flex items-center justify-center shrink-0 mt-1 animate-pulse shadow-2xs">
-                <Bot className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
-              </div>
+              <img
+                src="/logo.png"
+                alt="ATNotebook IA"
+                className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl object-cover shrink-0 mt-1 animate-pulse shadow-2xs ring-1 ring-blue-500/50"
+              />
               <div className="max-w-md bg-slate-50/95 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 rounded-2xl rounded-tl-xs px-4 py-3 sm:px-5 sm:py-3.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 flex items-center gap-2.5 shadow-2xs">
                 <RefreshCw className="w-4 h-4 animate-spin text-slate-500 shrink-0" />
                 <span>Consultando fontes ativas das sessões e formulando resposta...</span>

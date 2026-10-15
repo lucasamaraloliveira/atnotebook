@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b0f19" />
+      <stop offset="50%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#030712" />
+    </linearGradient>
+    <linearGradient id="neonCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <linearGradient id="neonViolet" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" />
+      <stop offset="50%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#ec4899" />
+    </linearGradient>
+    <linearGradient id="neonGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24" />
+      <stop offset="100%" stop-color="#f59e0b" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background container with rounded corners -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)" stroke="#1e293b" stroke-width="4" />
+
+  <!-- Outer subtle glow aura -->
+  <circle cx="256" cy="270" r="160" fill="#0284c7" opacity="0.15" filter="url(#glow)" />
+
+  <!-- Open Book Structure -->
+  <g filter="url(#glow)">
+    <!-- Book spine center -->
+    <path d="M 256 160 L 256 385" stroke="#94a3b8" stroke-width="4" stroke-linecap="round" />
+    <path d="M 235 385 C 248 392, 264 392, 277 385" stroke="#94a3b8" stroke-width="4" stroke-linecap="round" fill="none" />
+
+    <!-- Left Book Pages Outline -->
+    <path d="M 256 180 C 205 155, 145 155, 115 170 L 115 350 C 145 335, 205 335, 256 365 Z" 
+          stroke="url(#neonCyan)" stroke-width="8" stroke-linejoin="round" fill="none" />
+    <!-- Left Inner Page layer -->
+    <path d="M 256 198 C 215 175, 160 175, 135 188 L 135 338 C 160 325, 215 325, 256 350" 
+          stroke="#38bdf8" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.6" />
+
+    <!-- Right Book Pages Outline -->
+    <path d="M 256 180 C 307 155, 367 155, 397 170 L 397 350 C 367 335, 307 335, 256 365 Z" 
+          stroke="url(#neonCyan)" stroke-width="8" stroke-linejoin="round" fill="none" />
+    <!-- Right Inner Page layer -->
+    <path d="M 256 198 C 297 175, 352 175, 377 188 L 377 338 C 352 325, 297 325, 256 350" 
+          stroke="#38bdf8" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.6" />
+  </g>
+
+  <!-- Left Page: Neural AI Brain / Knowledge Nodes -->
+  <g transform="translate(185, 255) scale(0.9)" filter="url(#glow)">
+    <!-- Connections -->
+    <line x1="0" y1="0" x2="-25" y2="-25" stroke="#38bdf8" stroke-width="3" opacity="0.8" />
+    <line x1="0" y1="0" x2="25" y2="-20" stroke="#a855f7" stroke-width="3" opacity="0.8" />
+    <line x1="0" y1="0" x2="-35" y2="15" stroke="#06b6d4" stroke-width="3" opacity="0.8" />
+    <line x1="0" y1="0" x2="15" y2="30" stroke="#ec4899" stroke-width="3" opacity="0.8" />
+    <line x1="-25" y1="-25" x2="-10" y2="-45" stroke="#38bdf8" stroke-width="3" opacity="0.8" />
+    <line x1="25" y1="-20" x2="35" y2="-45" stroke="#a855f7" stroke-width="3" opacity="0.8" />
+    <line x1="-10" y1="-45" x2="15" y2="-55" stroke="#ec4899" stroke-width="3" opacity="0.8" />
+    <line x1="15" y1="-55" x2="35" y2="-45" stroke="#a855f7" stroke-width="3" opacity="0.8" />
+    <line x1="-35" y1="15" x2="-15" y2="45" stroke="#06b6d4" stroke-width="3" opacity="0.8" />
+    <line x1="15" y1="30" x2="-15" y2="45" stroke="#ec4899" stroke-width="3" opacity="0.8" />
+
+    <!-- Nodes -->
+    <circle cx="0" cy="0" r="9" fill="#ffffff" stroke="#38bdf8" stroke-width="3" />
+    <circle cx="-25" cy="-25" r="6" fill="#38bdf8" />
+    <circle cx="25" cy="-20" r="7" fill="#a855f7" />
+    <circle cx="-35" cy="15" r="6" fill="#06b6d4" />
+    <circle cx="15" cy="30" r="6" fill="#ec4899" />
+    <circle cx="-10" cy="-45" r="6" fill="#67e8f9" />
+    <circle cx="35" cy="-45" r="6" fill="#c084fc" />
+    <circle cx="15" cy="-55" r="7" fill="#f472b6" />
+    <circle cx="-15" cy="45" r="6" fill="#22d3ee" />
+  </g>
+
+  <!-- Right Page & Arch: Tech Quill Fountain Pen with AI Spark -->
+  <g filter="url(#glow)">
+    <!-- Stream of thought connecting brain to quill -->
+    <path d="M 210 280 C 240 330, 275 320, 290 295" stroke="url(#neonViolet)" stroke-width="4" stroke-dasharray="6,4" fill="none" opacity="0.9" />
+
+    <!-- Modern Stylized Quill Pen -->
+    <g transform="translate(325, 225) rotate(-35)">
+      <!-- Nib tip -->
+      <path d="M 0 85 L 14 55 L -14 55 Z" fill="url(#neonGold)" />
+      <line x1="0" y1="85" x2="0" y2="65" stroke="#0f172a" stroke-width="2" />
+      <circle cx="0" cy="65" r="2.5" fill="#0f172a" />
+      <!-- Nib collar -->
+      <rect x="-13" y="47" width="26" height="8" rx="2" fill="#e2e8f0" />
+      <!-- Pen body / Feather wing -->
+      <path d="M -13 47 C -22 10, -18 -40, 22 -85 C 5 -40, 5 10, 13 47 Z" fill="url(#neonCyan)" />
+      <!-- Inner accent line -->
+      <path d="M 0 45 C -2 15, 2 -25, 16 -65" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" fill="none" />
+    </g>
+
+    <!-- Glowing Star / AI Spark at tip -->
+    <g transform="translate(305, 305) scale(0.7)">
+      <polygon points="0,-18 5,-5 18,0 5,5 0,18 -5,5 -18,0 -5,-5" fill="#fef08a" />
+      <circle cx="0" cy="0" r="3" fill="#ffffff" />
+    </g>
+  </g>
+</svg>

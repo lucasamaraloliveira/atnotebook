@@ -27,6 +27,7 @@ import {
   RefreshCw,
   MoreVertical,
   X,
+  BarChart3,
 } from 'lucide-react';
 
 
@@ -41,6 +42,7 @@ interface HeaderProps {
   onOpenMigration: () => void;
   onOpenImportNotebook?: () => void;
   onOpenShareExport: () => void;
+  onOpenAnalytics?: () => void;
   onRenameNotebook?: (id: string, newTitle: string) => void;
   onOpenEditNotebook?: (notebook: Notebook) => void;
   onDeleteNotebook?: (id: string) => void;
@@ -51,6 +53,7 @@ interface HeaderProps {
   isNotesOpen?: boolean;
   onToggleNotes?: () => void;
 }
+
 
 export function Header({
   notebooks,
@@ -63,6 +66,7 @@ export function Header({
   onOpenMigration,
   onOpenImportNotebook,
   onOpenShareExport,
+  onOpenAnalytics,
   onRenameNotebook,
   onOpenEditNotebook,
   onDeleteNotebook,
@@ -112,15 +116,20 @@ export function Header({
         {/* Brand & Notebook Selector */}
         <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
           <div className="flex items-center gap-1.5 sm:gap-2">
-            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-900 dark:bg-slate-800 text-white flex items-center justify-center shadow-xs shrink-0">
-              <span className="text-base sm:text-lg">{activeNotebook.emoji || '📓'}</span>
-            </div>
+            <img
+              src="/logo.png"
+              alt="ATNotebook Logo"
+              className="w-8 h-8 sm:w-9 sm:h-9 object-contain drop-shadow-xs shrink-0 select-none"
+            />
             <div className="hidden sm:block">
-              <span className="font-semibold text-slate-900 dark:text-slate-100 text-sm tracking-tight block">
+              <span className="font-bold text-slate-900 dark:text-slate-100 text-sm tracking-tight flex items-center gap-1">
                 ATNotebook
+                <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.2 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300">
+                  AI
+                </span>
               </span>
               <span className="text-[11px] text-slate-500 dark:text-slate-400 block leading-tight">
-                {isReadOnly ? 'Acesso Leitor' : 'Caderno de Fontes'}
+                {isReadOnly ? 'Acesso Leitor' : 'Caderno Inteligente de Fontes'}
               </span>
             </div>
           </div>
@@ -359,13 +368,15 @@ export function Header({
 
             {/* Cloud / Local Persistence Indicator */}
             {cloudSyncStatus === 'synced' && (
-              <span
-                title="Cadernos salvos e sincronizados no Firebase Cloud Firestore."
-                className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-full"
+              <button
+                type="button"
+                onClick={onManualSyncCloud}
+                title="Cadernos salvos e sincronizados no Firebase Cloud Firestore. Clique para sincronizar agora."
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-300 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 border border-emerald-200 dark:border-emerald-800/60 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
               >
                 <CloudCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Nuvem Firestore</span>
-              </span>
+              </button>
             )}
 
             {cloudSyncStatus === 'syncing' && (
@@ -373,6 +384,18 @@ export function Header({
                 <RefreshCw className="w-3 h-3 text-blue-600 dark:text-blue-400 animate-spin" />
                 <span>Sincronizando Nuvem...</span>
               </span>
+            )}
+
+            {cloudSyncStatus === 'error' && (
+              <button
+                type="button"
+                onClick={onManualSyncCloud}
+                title="Erro temporário ao sincronizar com a nuvem. Clique para tentar novamente."
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-rose-700 dark:text-rose-300 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800/60 px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+              >
+                <Database className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+                <span>Reconectar Nuvem</span>
+              </button>
             )}
 
             {(cloudSyncStatus === 'local_only' || cloudSyncStatus === 'api_disabled' || !cloudSyncStatus) && (
@@ -391,6 +414,19 @@ export function Header({
 
         {/* Actions (Desktop & Mobile Responsive) */}
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          {/* Notebook Analytics & Usage Statistics Button (Only for Admin 'owner' or 'editor') */}
+          {!isReadOnly && onOpenAnalytics && (
+            <button
+              type="button"
+              onClick={onOpenAnalytics}
+              title="Estatísticas e métricas de uso deste caderno"
+              className="p-1.5 sm:p-2 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer group"
+              aria-label="Ver estatísticas de uso do caderno"
+            >
+              <BarChart3 className="w-4 h-4 text-slate-600 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400" />
+            </button>
+          )}
+
           {/* Dark Mode Toggle */}
           <button
             onClick={onToggleTheme}
@@ -577,6 +613,23 @@ export function Header({
 
             {/* Action Buttons List */}
             <div className="space-y-1.5">
+              {onOpenAnalytics && !isReadOnly && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    onOpenAnalytics();
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-left text-slate-800 dark:text-slate-200"
+                >
+                  <BarChart3 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                  <div className="flex-1">
+                    <span className="text-xs font-semibold block">Estatísticas de Uso</span>
+                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block">Frequência semanal de requisições e tokens</span>
+                  </div>
+                </button>
+              )}
+
               {onOpenEditNotebook && (
                 <button
                   type="button"

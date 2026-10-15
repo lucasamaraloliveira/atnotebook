@@ -2,7 +2,12 @@
 
 import React, { useState } from 'react';
 import { Notebook } from '@/lib/types';
-import { exportNotebookAsJson, exportNotebookAsMarkdown, encodeNotebookForShare } from '@/lib/storage';
+import {
+  exportNotebookAsJson,
+  exportNotebookAsMarkdown,
+  encodeNotebookForShare,
+  exportFullNotebookFile,
+} from '@/lib/storage';
 import {
   X,
   Share2,
@@ -18,6 +23,8 @@ import {
   UserCheck,
   Link,
   ShieldAlert,
+  Sparkles,
+  Layers,
 } from 'lucide-react';
 
 interface ShareExportModalProps {
@@ -267,36 +274,91 @@ export function ShareExportModal({
 
           {/* Export Options */}
           <div className="space-y-3 pt-2 border-t border-slate-200 dark:border-slate-800">
-            <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">
-              3. Exportar Arquivo deste Caderno Individual:
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">
+                3. Exportar Arquivo & Backup do Caderno:
+              </span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                {notebook.sources.length} fontes · {notebook.sections.length} seções
+              </span>
+            </div>
 
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                onClick={() => exportNotebookAsJson(notebook, selectedRole === 'viewer')}
-                className="p-3 bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-left transition-colors flex items-center gap-2.5"
-              >
-                <FileCode className="w-4 h-4 text-blue-600 shrink-0" />
+            {/* Featured Export: Complete .atnb package */}
+            <div className="p-3.5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800/80 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+              <div className="flex items-start gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-2xs mt-0.5 sm:mt-0">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
                 <div>
-                  <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100">
+                      Caderno Completo (.atnb)
+                    </h4>
+                    <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-blue-600 text-white shadow-2xs">
+                      Recomendado
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed mt-0.5">
+                    Pacote nativo com metadados, todas as seções, fontes integradas, notas e histórico de conversas do chat.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => exportFullNotebookFile(notebook, 'atnb')}
+                className="px-3.5 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all shadow-xs flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Exportar .atnb</span>
+              </button>
+            </div>
+
+            {/* Secondary Formats: Full JSON, Copy JSON, and Markdown */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+              <button
+                type="button"
+                onClick={() => exportFullNotebookFile(notebook, 'json')}
+                className="p-3 bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-left transition-colors flex items-center gap-2.5 cursor-pointer"
+              >
+                <FileCode className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                <div className="min-w-0">
+                  <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
                     Exportar JSON
                   </h4>
-                  <p className="text-[10px] text-slate-500">
-                    {selectedRole === 'viewer' ? 'Modo Leitor' : 'Modo Completo'}
-                  </p>
+                  <p className="text-[10px] text-slate-500 truncate">Backup completo (.json)</p>
                 </div>
               </button>
 
               <button
+                type="button"
+                onClick={handleCopyJson}
+                className="p-3 bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-left transition-colors flex items-center gap-2.5 cursor-pointer"
+              >
+                {copiedPayload ? (
+                  <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                ) : (
+                  <Copy className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
+                )}
+                <div className="min-w-0">
+                  <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    {copiedPayload ? 'JSON Copiado!' : 'Copiar JSON'}
+                  </h4>
+                  <p className="text-[10px] text-slate-500 truncate">1 clique para clipboard</p>
+                </div>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => exportNotebookAsMarkdown(notebook)}
-                className="p-3 bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-left transition-colors flex items-center gap-2.5"
+                className="p-3 bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-left transition-colors flex items-center gap-2.5 cursor-pointer"
               >
                 <FileText className="w-4 h-4 text-slate-700 dark:text-slate-300 shrink-0" />
-                <div>
-                  <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                    Relatório Markdown
+                <div className="min-w-0">
+                  <h4 className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    Markdown (.md)
                   </h4>
-                  <p className="text-[10px] text-slate-500">Com fontes e sessões</p>
+                  <p className="text-[10px] text-slate-500 truncate">Relatório legível</p>
                 </div>
               </button>
             </div>

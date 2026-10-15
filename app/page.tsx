@@ -19,6 +19,7 @@ import {
   setStoredTheme,
   decodeNotebookFromShare,
   reconcileNotebooks,
+  createClonedNotebookFromImport,
 } from '@/lib/storage';
 import {
   loadNotebooksFromDB,
@@ -27,6 +28,12 @@ import {
   deleteChatSessionFromDB,
   clearChatSessionsFromDB,
 } from '@/lib/db';
+import {
+  saveNotebookToFirestore,
+  loadNotebooksFromFirestore,
+  deleteNotebookFromFirestore,
+  type CloudSyncStatus,
+} from '@/lib/firestore';
 import { Header } from '@/components/Header';
 import { SourcesPanel } from '@/components/SourcesPanel';
 import { ChatWorkspace } from '@/components/ChatWorkspace';
@@ -41,6 +48,7 @@ import { SectionModal } from '@/components/SectionModal';
 import { AuditDuplicatesModal } from '@/components/AuditDuplicatesModal';
 import { DeleteSectionModal } from '@/components/DeleteSectionModal';
 import { EditNotebookModal } from '@/components/EditNotebookModal';
+import { ImportNotebookModal } from '@/components/ImportNotebookModal';
 import {
   Layers,
   MessageSquare,
@@ -91,6 +99,10 @@ export default function Home() {
             stored.unshift(decoded);
           }
           return stored;
+        } else if (window.location.hash.startsWith('#data=')) {
+          try {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          } catch {}
         }
       }
       const urlNbId = urlParams.get('notebookId');
@@ -149,6 +161,9 @@ export default function Home() {
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
   const [isShareExportOpen, setIsShareExportOpen] = useState(false);
   const [isNewNotebookOpen, setIsNewNotebookOpen] = useState(false);
+  const [isImportNotebookOpen, setIsImportNotebookOpen] = useState(false);
+  const [importSuccessToast, setImportSuccessToast] = useState<string | null>(null);
+  const [cloudSyncStatus, setCloudSyncStatus] = useState<CloudSyncStatus>('local_only');
   const [isEditNotebookOpen, setIsEditNotebookOpen] = useState(false);
   const [notebookToEdit, setNotebookToEdit] = useState<Notebook | null>(null);
   const [isSectionModalOpen, setIsSectionModalOpen] = useState(false);
@@ -203,6 +218,11 @@ export default function Home() {
             (window.location.hash.startsWith('#data=') ? window.location.hash.slice(6) : '');
           if (urlData) {
             sharedNb = decodeNotebookFromShare(urlData);
+            if (!sharedNb && window.location.hash.startsWith('#data=')) {
+              try {
+                window.history.replaceState(null, '', window.location.pathname + window.location.search);
+              } catch {}
+            }
           }
         }
       }
@@ -210,6 +230,17 @@ export default function Home() {
       const localNotebooks = getStoredNotebooks();
       const dbNotebooks = await loadNotebooksFromDB();
       let reconciled = reconcileNotebooks(localNotebooks, dbNotebooks);
+
+      // Reconcile with Firebase Cloud Firestore if available
+      try {
+        const { notebooks: cloudNotebooks, status } = await loadNotebooksFromFirestore();
+        setCloudSyncStatus(status);
+        if (cloudNotebooks && cloudNotebooks.length > 0) {
+          reconciled = reconcileNotebooks(reconciled, cloudNotebooks);
+        }
+      } catch (e) {
+        console.warn('Firestore initial sync skipped:', e);
+      }
 
       if (sharedNb) {
         const cleanChat = typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('cleanChat') === 'true';
@@ -268,10 +299,37 @@ export default function Home() {
     setStoredTheme(nextTheme);
   };
 
-  // Sync to storage
+  // Sync to storage (LocalStorage, IndexedDB and Cloud Firestore)
   const updateNotebooksAndSave = (updated: Notebook[]) => {
     setNotebooks(updated);
     saveNotebooks(updated);
+
+    // Sync active notebook to Firebase Cloud Firestore in background
+    const targetNb = updated.find((n) => n.id === activeNotebookId) || updated[0];
+    if (targetNb) {
+      setCloudSyncStatus('syncing');
+      saveNotebookToFirestore(targetNb)
+        .then((res) => setCloudSyncStatus(res.status))
+        .catch(() => setCloudSyncStatus('local_only'));
+    }
+  };
+
+  const handleManualSyncCloud = async () => {
+    setCloudSyncStatus('syncing');
+    try {
+      const res = await saveNotebookToFirestore(activeNotebook);
+      setCloudSyncStatus(res.status);
+      if (res.status === 'api_disabled') {
+        alert(
+          'A API Cloud Firestore ainda não está ativada no projeto Firebase (atnotebook-1eb35).\n\nPara ativá-la e sincronizar automaticamente entre múltiplos dispositivos, acesse:\nhttps://console.firebase.google.com/project/atnotebook-1eb35/firestore\n\nEnquanto isso, seus cadernos continuam 100% salvos e seguros no IndexedDB local do seu navegador!'
+        );
+      } else if (res.success) {
+        setImportSuccessToast(`Caderno "${activeNotebook.title}" sincronizado com a nuvem Firebase!`);
+        setTimeout(() => setImportSuccessToast(null), 4000);
+      }
+    } catch {
+      setCloudSyncStatus('error');
+    }
   };
 
   const activeNotebook =
@@ -315,6 +373,33 @@ export default function Home() {
     setActiveId(newNb.id);
     setActiveNotebookId(newNb.id);
     setActiveSectionFilter(null);
+  };
+
+  // Import full notebook package (.atnb / .json) as an independent cloned notebook
+  const handleImportCompleteNotebook = (imported: Notebook, customTitle?: string) => {
+    const cloned = createClonedNotebookFromImport(imported, customTitle);
+    const updated = [cloned, ...notebooks];
+    updateNotebooksAndSave(updated);
+    saveNotebookToDB(cloned).catch((err) => {
+      console.error('Failed to sync imported notebook to IndexedDB:', err);
+    });
+    setActiveId(cloned.id);
+    setActiveNotebookId(cloned.id);
+    setActiveSectionFilter(null);
+
+    const sourcesCount = cloned.sources.length;
+    const sectionsCount = cloned.sections.length;
+    const notesCount = cloned.notes.length;
+    const chatCount = (cloned.chatSessions || []).length;
+    const msg = `Caderno "${cloned.title}" importado com sucesso! (${sourcesCount} ${
+      sourcesCount === 1 ? 'fonte' : 'fontes'
+    }, ${sectionsCount} ${sectionsCount === 1 ? 'seção' : 'seções'}${
+      notesCount > 0 ? `, ${notesCount} ${notesCount === 1 ? 'nota' : 'notas'}` : ''
+    }${chatCount > 0 ? `, ${chatCount} ${chatCount === 1 ? 'conversa' : 'conversas'}` : ''})`;
+    setImportSuccessToast(msg);
+    setTimeout(() => {
+      setImportSuccessToast(null);
+    }, 5000);
   };
 
   // Rename or update existing notebook
@@ -888,6 +973,7 @@ export default function Home() {
     if (notebooks.length <= 1) return;
     const filtered = notebooks.filter((n) => n.id !== id);
     updateNotebooksAndSave(filtered);
+    deleteNotebookFromFirestore(id).catch(() => {});
     if (activeNotebookId === id) {
       setActiveId(filtered[0]?.id || '');
     }
@@ -905,9 +991,12 @@ export default function Home() {
         notebooks={notebooks}
         activeNotebook={activeNotebook}
         userRole={userRole}
+        cloudSyncStatus={cloudSyncStatus}
+        onManualSyncCloud={handleManualSyncCloud}
         onSelectNotebook={handleSelectNotebook}
         onOpenNewNotebook={() => setIsNewNotebookOpen(true)}
         onOpenMigration={() => setIsMigrationOpen(true)}
+        onOpenImportNotebook={() => setIsImportNotebookOpen(true)}
         onOpenShareExport={() => setIsShareExportOpen(true)}
         onRenameNotebook={handleRenameNotebook}
         onOpenEditNotebook={handleOpenEditNotebook}
@@ -1292,6 +1381,12 @@ export default function Home() {
         onCreateNotebook={handleCreateNotebook}
       />
 
+      <ImportNotebookModal
+        isOpen={isImportNotebookOpen}
+        onClose={() => setIsImportNotebookOpen(false)}
+        onConfirmImport={handleImportCompleteNotebook}
+      />
+
       <EditNotebookModal
         isOpen={isEditNotebookOpen}
         onClose={() => {
@@ -1301,6 +1396,30 @@ export default function Home() {
         notebook={notebookToEdit}
         onSaveNotebook={handleSaveNotebookDetails}
       />
+
+      {/* Import Complete Success Toast */}
+      {importSuccessToast && (
+        <div className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 animate-in slide-in-from-bottom-3 fade-in duration-200 max-w-sm sm:max-w-md w-[calc(100%-2rem)] sm:w-auto shadow-2xl">
+          <div className="bg-slate-900 text-white dark:bg-slate-800 dark:text-slate-100 border border-slate-700/80 rounded-2xl p-3.5 flex items-center justify-between gap-3 backdrop-blur-md">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <p className="text-xs font-medium leading-snug">
+                {importSuccessToast}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setImportSuccessToast(null)}
+              className="p-1 text-slate-400 hover:text-white rounded transition-colors cursor-pointer shrink-0"
+              title="Fechar notificação"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

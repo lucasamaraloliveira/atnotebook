@@ -103,6 +103,34 @@ export interface Notebook {
   shareSettings?: ShareSettings;
 }
 
+export interface ATNotebookExportPackage {
+  format: 'ATNotebook';
+  version: 1;
+  exportedAt: string;
+  notebook: {
+    id: string;
+    title: string;
+    description: string;
+    emoji: string;
+    createdAt: string;
+    updatedAt: string;
+    ownerEmail?: string;
+    shareSettings?: ShareSettings;
+    sections: NotebookSection[];
+    sources: NotebookSource[];
+    notes: NotebookNote[];
+    chatHistory: ChatMessage[];
+    chatSessions?: ChatSession[];
+  };
+  metrics: {
+    totalSources: number;
+    totalSections: number;
+    totalNotes: number;
+    totalChatSessions: number;
+    totalWords: number;
+  };
+}
+
 export interface MigrationDraftItem {
   id: string;
   title: string;

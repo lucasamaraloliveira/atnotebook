@@ -185,9 +185,9 @@ export function ChatWorkspace({
   return (
     <div className="flex flex-col h-full w-full bg-white dark:bg-slate-900 relative transition-colors overflow-hidden">
       {/* Workspace Banner */}
-      <div className="px-4 sm:px-8 py-2.5 sm:py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/90 flex items-center justify-between gap-3 text-xs text-slate-600 dark:text-slate-400 shrink-0 z-10 w-full">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+      <div className="px-3 sm:px-8 py-2 sm:py-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/90 flex items-center justify-between gap-2 sm:gap-3 text-xs text-slate-600 dark:text-slate-400 shrink-0 z-10 w-full">
+        <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+          <span className="font-semibold text-slate-900 dark:text-slate-100 truncate text-xs sm:text-sm">
             {notebookTitle}
           </span>
           <span aria-hidden="true" className="hidden xs:inline">·</span>
@@ -206,12 +206,12 @@ export function ChatWorkspace({
             <button
               type="button"
               onClick={() => setIsHistoryOpen(true)}
-              className="flex items-center gap-1.5 text-[11px] font-semibold py-1 px-2.5 sm:px-3 rounded-lg border bg-slate-100 dark:bg-slate-800 border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 dark:hover:bg-slate-700 transition-all cursor-pointer shadow-2xs"
+              className="flex items-center gap-1 sm:gap-1.5 text-[11px] font-semibold py-1 px-2 sm:px-3 rounded-lg border bg-slate-100 dark:bg-slate-800 border-slate-200/80 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 dark:hover:bg-slate-700 transition-all cursor-pointer shadow-2xs"
               title="Ver histórico de conversas e ações salvas no banco de dados"
             >
               <History className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span>Histórico</span>
-              <span className="ml-0.5 px-1.5 py-0.2 bg-amber-200/80 dark:bg-amber-950 text-amber-900 dark:text-amber-300 text-[10px] font-bold rounded-full">
+              <span className="hidden xs:inline">Histórico</span>
+              <span className="px-1.5 py-0.2 bg-amber-200/80 dark:bg-amber-950 text-amber-900 dark:text-amber-300 text-[10px] font-bold rounded-full">
                 {chatSessions.length}
               </span>
             </button>
@@ -238,11 +238,12 @@ export function ChatWorkspace({
               }`}
             >
               <RotateCcw className="w-3 h-3" />
-              <span>Novo Chat</span>
+              <span className="hidden xs:inline">Novo Chat</span>
             </button>
           )}
         </div>
       </div>
+
 
       {/* Messages Thread */}
       <div className="flex-1 overflow-y-auto px-4 sm:px-8 py-4 sm:py-6 w-full min-h-0 flex flex-col justify-between">
@@ -535,14 +536,13 @@ export function ChatWorkspace({
       </div>
 
       {/* Input Form Footer (Pinned at Bottom) */}
-      <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md w-full shrink-0 sticky bottom-0 z-20">
+      <div className="p-3 sm:p-5 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md w-full shrink-0 sticky bottom-0 z-20">
         <form onSubmit={handleSubmit} className="w-full max-w-5xl xl:max-w-6xl mx-auto space-y-2">
           {activeSources.length === 0 && (
-            <div className="p-2.5 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-center gap-2">
+            <div className="p-2 sm:p-2.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
               <span>
-                Nenhuma fonte está ativa nas sessões. Marque fontes no painel para que a IA possa
-                responder.
+                Nenhuma fonte está ativa. Marque fontes no painel para que a IA possa responder.
               </span>
             </div>
           )}
@@ -552,28 +552,29 @@ export function ChatWorkspace({
               type="text"
               placeholder={
                 activeSources.length === 0
-                  ? 'Selecione fontes no painel esquerdo para perguntar...'
-                  : `Pergunte à IA sobre as ${activeSources.length} fontes ativas...`
+                  ? 'Selecione fontes para perguntar...'
+                  : `Pergunte à IA sobre as ${activeSources.length} fontes...`
               }
               value={input}
               disabled={isGenerating || activeSources.length === 0}
               onChange={(e) => setInput(e.target.value)}
-              className="w-full pl-4 pr-12 py-3 text-sm bg-slate-50 dark:bg-slate-800 hover:bg-slate-100/50 dark:hover:bg-slate-800/90 focus:bg-white dark:focus:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:text-slate-900 dark:focus:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-slate-900 dark:focus:ring-blue-600 transition-all disabled:opacity-50 shadow-2xs"
+              className="w-full pl-3.5 sm:pl-4 pr-12 py-2.5 sm:py-3 text-base sm:text-sm bg-slate-50 dark:bg-slate-800 hover:bg-slate-100/50 dark:hover:bg-slate-800/90 focus:bg-white dark:focus:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 focus:text-slate-900 dark:focus:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-hidden focus:ring-2 focus:ring-slate-900 dark:focus:ring-blue-600 transition-all disabled:opacity-50 shadow-2xs"
             />
             <button
               type="submit"
               disabled={!input.trim() || isGenerating || activeSources.length === 0}
-              className="absolute right-2 p-2 bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white rounded-lg transition-colors disabled:cursor-not-allowed shadow-2xs cursor-pointer"
+              className="absolute right-1.5 sm:right-2 p-2 bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-700 disabled:bg-slate-200 dark:disabled:bg-slate-800 text-white rounded-lg transition-colors disabled:cursor-not-allowed shadow-2xs cursor-pointer"
             >
               <Send className="w-4 h-4" />
             </button>
           </div>
           <div className="flex items-center justify-between text-[11px] text-slate-400 px-1">
-            <span>Respostas ancoradas estritamente nas fontes com verificação de integridade.</span>
-            <span>Enter para enviar</span>
+            <span className="truncate">Respostas estritamente ancoradas nas fontes com citações.</span>
+            <span className="hidden sm:inline shrink-0 ml-2">Enter para enviar</span>
           </div>
         </form>
       </div>
+
 
       {/* Clear Chat Confirmation Modal */}
       {isConfirmClearOpen && (

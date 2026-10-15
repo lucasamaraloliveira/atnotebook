@@ -62,7 +62,9 @@ import {
   PanelLeftOpen,
   PanelRightOpen,
   RotateCcw,
+  Sparkles,
 } from 'lucide-react';
+
 
 interface UndoDeleteSectionState {
   section: NotebookSection;
@@ -1032,46 +1034,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Mobile Tab Selector (Hidden for reader role as only chat workspace is visible) */}
-      {userRole !== 'viewer' && (
-        <div className="md:hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 flex items-center justify-around gap-1 text-xs shrink-0 z-20">
-          <button
-            onClick={() => setMobileTab('sources')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg transition-colors text-xs ${
-              mobileTab === 'sources'
-                ? 'bg-slate-900 dark:bg-blue-600 text-white font-semibold shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Layers className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Fontes ({activeNotebook.sources.length})</span>
-          </button>
-
-          <button
-            onClick={() => setMobileTab('chat')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg transition-colors text-xs ${
-              mobileTab === 'chat'
-                ? 'bg-slate-900 dark:bg-blue-600 text-white font-semibold shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <MessageSquare className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Chat IA</span>
-          </button>
-
-          <button
-            onClick={() => setMobileTab('notes')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg transition-colors text-xs ${
-              mobileTab === 'notes'
-                ? 'bg-slate-900 dark:bg-blue-600 text-white font-semibold shadow-xs'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-            }`}
-          >
-            <Bookmark className="w-3.5 h-3.5 shrink-0" />
-            <span className="truncate">Seções & Notas</span>
-          </button>
-        </div>
-      )}
 
       {/* Main Studio Workspace */}
       <main className="flex-1 min-h-0 flex overflow-hidden w-full relative">
@@ -1233,6 +1195,86 @@ export default function Home() {
           </div>
         )}
       </main>
+
+      {/* Mobile Bottom Navigation Bar (iOS / Android Ergonomic Tab Bar) */}
+      {userRole !== 'viewer' && (
+        <nav
+          aria-label="Navegação rápida do aplicativo"
+          className="md:hidden shrink-0 z-30 border-t border-slate-200/90 dark:border-slate-800/90 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg pb-safe shadow-[0_-2px_12px_rgba(0,0,0,0.06)] dark:shadow-[0_-2px_12px_rgba(0,0,0,0.35)] transition-colors select-none"
+        >
+          <div className="grid grid-cols-3 h-14 items-stretch px-3">
+            {/* Tab 1: Fontes */}
+            <button
+              type="button"
+              onClick={() => setMobileTab('sources')}
+              className={`flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer relative py-1 ${
+                mobileTab === 'sources'
+                  ? 'text-blue-600 dark:text-blue-400 font-semibold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95'
+              }`}
+            >
+              <div className="relative">
+                <Layers className={`w-5 h-5 transition-transform ${mobileTab === 'sources' ? 'scale-110' : ''}`} />
+                {activeNotebook.sources.length > 0 && (
+                  <span className="absolute -top-1.5 -right-3 min-w-[17px] h-4 px-1 rounded-full bg-slate-900 dark:bg-blue-600 text-[10px] font-bold text-white flex items-center justify-center leading-none shadow-2xs">
+                    {activeNotebook.sources.length}
+                  </span>
+                )}
+              </div>
+              <span className="text-[11px] tracking-tight">Fontes</span>
+              {mobileTab === 'sources' && (
+                <span className="absolute bottom-1 w-7 h-0.5 rounded-full bg-blue-600 dark:bg-blue-400" />
+              )}
+            </button>
+
+            {/* Tab 2: Chat IA */}
+            <button
+              type="button"
+              onClick={() => setMobileTab('chat')}
+              className={`flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer relative py-1 ${
+                mobileTab === 'chat'
+                  ? 'text-amber-600 dark:text-amber-400 font-semibold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95'
+              }`}
+            >
+              <div className="relative">
+                <Sparkles className={`w-5 h-5 transition-transform ${mobileTab === 'chat' ? 'scale-115 text-amber-500' : ''}`} />
+                {activeNotebook.sources.filter((s) => s.enabled).length > 0 && (
+                  <span className="absolute -top-1 -right-2 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900" title="Fontes ativas ancoradas" />
+                )}
+              </div>
+              <span className="text-[11px] tracking-tight">Chat IA</span>
+              {mobileTab === 'chat' && (
+                <span className="absolute bottom-1 w-7 h-0.5 rounded-full bg-amber-500 dark:bg-amber-400" />
+              )}
+            </button>
+
+            {/* Tab 3: Notas */}
+            <button
+              type="button"
+              onClick={() => setMobileTab('notes')}
+              className={`flex flex-col items-center justify-center gap-1 rounded-xl transition-all cursor-pointer relative py-1 ${
+                mobileTab === 'notes'
+                  ? 'text-blue-600 dark:text-blue-400 font-semibold'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95'
+              }`}
+            >
+              <div className="relative">
+                <Bookmark className={`w-5 h-5 transition-transform ${mobileTab === 'notes' ? 'scale-110' : ''}`} />
+                {activeNotebook.notes.length > 0 && (
+                  <span className="absolute -top-1.5 -right-3 min-w-[17px] h-4 px-1 rounded-full bg-amber-500 dark:bg-amber-600 text-[10px] font-bold text-white flex items-center justify-center leading-none shadow-2xs">
+                    {activeNotebook.notes.length}
+                  </span>
+                )}
+              </div>
+              <span className="text-[11px] tracking-tight">Notas</span>
+              {mobileTab === 'notes' && (
+                <span className="absolute bottom-1 w-7 h-0.5 rounded-full bg-blue-600 dark:bg-blue-400" />
+              )}
+            </button>
+          </div>
+        </nav>
+      )}
 
       {/* Modals */}
       <MigrationModal
